@@ -28,4 +28,10 @@ def read_root():
 @app.post("/login")
 def login():
     print("Request aa rahi hai")
-    return {"message": "Succesful login"}
+    return ({"message": "Succesful login"})
+
+
+@app.post("/signup")
+def login():
+    print("Request aa rahi hai")
+    return ({"message": "Succesful signup"})
