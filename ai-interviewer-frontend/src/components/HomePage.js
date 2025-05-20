@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 
 const HomePage = () => {
   return (
-    <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: "url('https://source.unsplash.com/random/1920x1080?nature,water')" }}>
+    <div className="relative min-h-screen bg-cover bg-center" style={{ backgroundImage: "url('/interview.png')" }}>
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div className="relative z-10 flex flex-col items-center justify-between min-h-screen p-4">
         <header className="w-full pt-8">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }}>
-            Welcome to Our Platform
+            Master Technical Conversations with AI
           </h1>
         </header>
 
