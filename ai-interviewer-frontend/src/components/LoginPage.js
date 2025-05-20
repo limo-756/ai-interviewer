@@ -58,10 +58,8 @@ const LoginPage = () => {
 
         if (response.ok) {
           // Handle successful login
-          // e.g., store token, redirect to dashboard
           console.log('Login successful:', data);
-          // navigate('/dashboard'); // Example redirect
-          alert('Login successful! (Check console for details)');
+          navigate('/select-topic'); // Navigate to topic selection page
         } else {
           // Handle login failure
           setSubmitError(data.detail || 'Login failed. Please try again.');

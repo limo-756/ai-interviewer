@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -6,6 +7,7 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,10 +38,14 @@ const SignUp = () => {
       });
 
       if (response.ok) {
-        setSuccess('Signup successful!');
+        setSuccess('Signup successful! Redirecting...');
         setName('');
         setEmail('');
         setPassword('');
+        // Navigate to topic selection page after a short delay
+        setTimeout(() => {
+          navigate('/select-topic'); 
+        }, 1500); // 1.5 second delay to show success message
       } else if (response.status === 400) {
         const data = await response.json();
         setError(data.message || 'User already exists with this email.');
