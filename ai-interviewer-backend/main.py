@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 # JWT Configuration
 SECRET_KEY = "your-secret-key"  # Change this in a real application!
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 40
 
 app = FastAPI()
 
@@ -69,12 +69,14 @@ async def login(req: LoginRequest, headers: str | None = Header(default=None)):
     access_token = create_access_token(
         data={"sub": req.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user_agent_received": headers}
+    return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}
 
 
 @app.post("/signup")
 async def signup(req: SignupRequest):
     print(f"Signup request for email: {req.email}")
-    # Here you would typically create a new user
-    # For now, just returning a success message
-    return {"message": f"Successful signup for {req.email}"}
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": req.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}

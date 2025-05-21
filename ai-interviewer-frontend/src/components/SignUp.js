@@ -37,8 +37,11 @@ const SignUp = () => {
         body: JSON.stringify({ name, email, password }),
       });
 
+      const data = await response.json(); // Always parse JSON response
+
       if (response.ok) {
-        setSuccess('Signup successful! Redirecting...');
+        setSuccess(data.message || 'Signup successful! Redirecting...');
+        sessionStorage.setItem('access_token', data.access_token); // Save access token
         setName('');
         setEmail('');
         setPassword('');
@@ -47,10 +50,9 @@ const SignUp = () => {
           navigate('/select-topic'); 
         }, 1500); // 1.5 second delay to show success message
       } else if (response.status === 400) {
-        const data = await response.json();
         setError(data.message || 'User already exists with this email.');
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError(data.message || 'An unexpected error occurred. Please try again.');
       }
     } catch (err) {
       setError('Failed to connect to the server. Please try again later.');

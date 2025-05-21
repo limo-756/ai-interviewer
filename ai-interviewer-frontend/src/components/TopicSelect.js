@@ -65,12 +65,18 @@ const TopicSelect = () => {
     if (file) {
       formData.append('resumeFile', file);
     }
+    
+    const token = sessionStorage.getItem('access_token'); // Get token from session storage
 
     try {
       // Assuming your API endpoint is http://localhost:8000/start-interview
       const response = await fetch('http://localhost:8000/start-interview', {
         method: 'POST',
-        body: formData, // FormData handles the content type for file uploads
+        headers: {
+          // FormData handles the 'Content-Type', but we can add other headers
+          ...(token && { 'access_token': token }), // Add token to headers if it exists
+        },
+        body: formData, 
       });
 
       if (response.ok) {

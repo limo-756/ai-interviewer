@@ -7,6 +7,7 @@ const LoginPage = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const validateEmail = (emailToValidate) => {
@@ -40,6 +41,7 @@ const LoginPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitError(''); // Clear previous submission errors
+    setSuccessMessage(''); // Clear previous success messages
 
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
@@ -59,7 +61,12 @@ const LoginPage = () => {
         if (response.ok) {
           // Handle successful login
           console.log('Login successful:', data);
-          navigate('/select-topic'); // Navigate to topic selection page
+          sessionStorage.setItem('access_token', data.access_token); // Save access token
+          setSuccessMessage(data.message || 'Login successful!'); // Set success message
+          // Navigate after a short delay to allow the user to see the message
+          setTimeout(() => {
+            navigate('/select-topic'); // Navigate to topic selection page
+          }, 1500);
         } else {
           // Handle login failure
           setSubmitError(data.detail || 'Login failed. Please try again.');
@@ -76,6 +83,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-700">Login</h1>
+        {successMessage && <p className="text-green-500 text-sm mb-4 text-center">{successMessage}</p>}
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-1">Email Address</label>
