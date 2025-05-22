@@ -1,14 +1,21 @@
 # main.py
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+from app import schemas
+from app import crud
+from app import database
 
 # JWT Configuration
 SECRET_KEY = "your-secret-key"  # Change this in a real application!
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 40
+
+# Create database tables on startup
+database.init_db()
 
 app = FastAPI()
 
@@ -41,6 +48,15 @@ app.add_middleware(
 )
 
 
+# Dependency to get DB session
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 # Helper function to create access token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -60,11 +76,13 @@ def read_root():
 
 
 @app.post("/login")
-async def login(req: LoginRequest, headers: str | None = Header(default=None)):
+async def login(req: LoginRequest, headers: str | None = Header(default=None), db: Session = Depends(get_db)):
     print(f"Request aa rahi hai for email: {req.email}")
     print(f"User-Agent: {headers}")
-    # In a real app, you would verify the password here
-    # For now, we'll just create a token directly
+    user = crud.get_user_by_email(db, req.email)
+    if user is None or user.password != hash(req.password):
+        raise HTTPException(status_code=404, detail="User not found")
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": req.email}, expires_delta=access_token_expires
@@ -73,10 +91,33 @@ async def login(req: LoginRequest, headers: str | None = Header(default=None)):
 
 
 @app.post("/signup")
-async def signup(req: SignupRequest):
+async def signup(req: SignupRequest, db: Session = Depends(get_db)):
     print(f"Signup request for email: {req.email}")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": req.email}, expires_delta=access_token_expires
     )
+
+    user = schemas.User(req.name, req.email, req.password)
+    crud.create_user(db=db, user=user)
+    print("Entry successful")
     return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}
+
+
+# @app.post("/items/", response_model=schemas.Item)
+# def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
+#     return crud.create_item(db=db, item=item)
+#
+#
+# @app.get("/items/", response_model=list[schemas.Item])
+# def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+#     items = crud.get_items(db, skip=skip, limit=limit)
+#     return items
+#
+#
+# @app.get("/items/{item_id}", response_model=schemas.Item)
+# def read_item(item_id: int, db: Session = Depends(get_db)):
+#     db_item = crud.get_item(db, item_id=item_id)
+#     if db_item is None:
+#         raise HTTPException(status_code=404, detail="Item not found")
+#     return db_item
