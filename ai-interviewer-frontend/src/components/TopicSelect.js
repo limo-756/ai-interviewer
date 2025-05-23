@@ -60,23 +60,40 @@ const TopicSelect = () => {
   };
 
   const startInterview = async (topic, file = null) => {
-    const formData = new FormData();
-    formData.append('topic', topic);
+    let requestBody = {
+      topic: topic,
+      resumeFile: "" // Default to empty string as Pydantic model expects a string
+    };
+    let resumeFileNameForLog = file ? file.name : 'N/A';
+
     if (file) {
-      formData.append('resumeFile', file);
+      try {
+        const fileContentBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result); // reader.result is the data URL (base64 encoded string)
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+        requestBody.resumeFile = fileContentBase64;
+      } catch (err) {
+        console.error('Error reading or encoding resume file:', err);
+        setError('Failed to process the resume file. Please try again.');
+        return; // Stop the process if file reading fails
+      }
     }
     
     const token = sessionStorage.getItem('access_token'); // Get token from session storage
+    console.log('Session value is :', token, " : ", typeof token);
 
     try {
       // Assuming your API endpoint is http://localhost:8000/start-interview
       const response = await fetch('http://localhost:8000/start-interview', {
         method: 'POST',
         headers: {
-          // FormData handles the 'Content-Type', but we can add other headers
-          ...(token && { 'access_token': token }), // Add token to headers if it exists
+          'Content-Type': 'application/json', // Set content type to JSON
+          'access_token': token,
         },
-        body: formData, 
+        body: JSON.stringify(requestBody), // Send stringified JSON object
       });
 
       if (response.ok) {
@@ -84,10 +101,11 @@ const TopicSelect = () => {
         // For now, let's assume it navigates to an /interview page
         const interviewData = await response.json();
         navigate('/interview', { state: { interviewData } }); 
-        console.log('Interview started successfully for topic:', topic, 'with file:', file ? file.name : 'N/A');
+        console.log('Interview started successfully for topic:', topic, 'with file:', resumeFileNameForLog);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to start interview. Please try again.');
+        // Try to parse JSON error, if it fails, provide a generic message
+        const errorData = await response.json().catch(() => ({ detail: 'Failed to parse error response from server.' }));
+        setError(errorData.detail || 'Failed to start interview. Please try again.'); // Use errorData.detail for FastAPI errors
       }
     } catch (err) {
       console.error('Error starting interview:', err);

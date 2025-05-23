@@ -1,8 +1,10 @@
 # main.py
-from fastapi import FastAPI, Header, Depends, HTTPException
+from fastapi import FastAPI, Header, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from jose import JWTError
 from sqlalchemy.orm import Session
+import uuid
 
 from . import crud, database
 from .app.api.services.auth import Authenticator
@@ -26,7 +28,7 @@ class SignupRequest(BaseModel):
 
 class StartInterviewRequest(BaseModel):
     topic: str
-    file: str
+    resumeFile: str
 
 
 # Allow CORS from frontend
@@ -80,10 +82,31 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/start-interview")
-async def start_interview(req: StartInterviewRequest, headers: str | None = Header(default=None), db: Session = Depends(get_db)):
-    print(f"access_token: {headers.access_token}")
-    print(f"Starting interview for {req.topic}")
-    return {"interview_id": 123}
+async def start_interview(request: Request):
+    print(f"Received access_token in header: {request.headers}")
+
+    try:
+        user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Session Expired")
+    print(f"Validated user_id: {user_id}")
+
+    req = request.data
+    print(f"Starting interview for topic: {req.topic}")
+
+    if req.resumeFile:
+        # Assuming resumeFile is a base64 data URL. Just printing a snippet for confirmation.
+        print(f"Resume file provided (data URL starts with): {req.resumeFile[:70]}...")
+        # Add actual resume processing logic here (e.g., decode, save, parse)
+    else:
+        print("No resume file provided.")
+    
+    # Simulate interview creation and return a more dynamic ID
+    # In a real application, you would create an interview record in the database.
+    interview_id = str(uuid.uuid4()) # Generate a unique ID for the interview
+    
+    print(f"Interview created with ID: {interview_id} for user {user_id}")
+    return {"interview_id": interview_id}
 
 
 # @app.post("/items/", response_model=schemas.Item)
