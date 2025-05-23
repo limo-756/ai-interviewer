@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 from .database import Base
 from interviewer.app.api.schemas.user import User
 
@@ -25,6 +25,9 @@ class InterviewModel(Base):
     topic = Column(String, index=False)
     user_id = Column(Integer, index=True)
     chat_id = Column(Integer, index=True)
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    state = Column(String, index=True)
 
 
 class InterviewChatModel(Base):
