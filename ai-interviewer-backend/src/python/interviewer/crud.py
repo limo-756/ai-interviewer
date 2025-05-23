@@ -2,6 +2,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 import interviewer.models as models
+from interviewer.app.api.utils.hash_utils import stable_hash
 from interviewer.schemas import User
 
 
@@ -24,7 +25,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_user(db: Session, name: str, email: str, password: str):
-    db_item = models.UserModel(name=name, email=email, password_hash=hash(password))
+    db_item = models.UserModel(name=name, email=email, password_hash=stable_hash(password))
     db.add(db_item)
     db.commit()
     db.refresh(db_item)

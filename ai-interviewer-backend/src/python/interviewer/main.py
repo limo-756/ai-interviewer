@@ -8,6 +8,7 @@ import uuid
 
 from . import crud, database
 from .app.api.services.auth import Authenticator
+from .app.api.utils.hash_utils import stable_hash
 
 # Create database tables on startup
 database.init_db()
@@ -65,8 +66,9 @@ def read_root():
 async def login(req: LoginRequest, db: Session = Depends(get_db)):
     print(f"Request aa rahi hai for email: {req.email}")
     user = crud.get_user_by_email(db, req.email)
-    if user is None or user.password != hash(req.password):
-        print(f"Type for the user is {type(user)}, {user.password}, {hash(req.password)}, {req.password}")
+
+    if user is None or user.password != stable_hash(req.password):
+        print(f"Type for the user is {type(user)}, {user.password}, {stable_hash(req.password)}, {req.password}")
         raise HTTPException(status_code=404, detail="User not found")
 
     access_token = Authenticator().create_access_token(user)

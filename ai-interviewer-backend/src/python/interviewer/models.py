@@ -9,7 +9,7 @@ class UserModel(Base):
     id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
     name = Column(String, index=False)
     email = Column(String, unique=True, index=True)
-    password_hash = Column(Integer, index=False)
+    password_hash = Column(String, index=False)
 
     def to_user(self) -> User:
         return User(id=self.id,
