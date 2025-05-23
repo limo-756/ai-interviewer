@@ -105,7 +105,11 @@ const TopicSelect = () => {
       } else {
         // Try to parse JSON error, if it fails, provide a generic message
         const errorData = await response.json().catch(() => ({ detail: 'Failed to parse error response from server.' }));
-        setError(errorData.detail || 'Failed to start interview. Please try again.'); // Use errorData.detail for FastAPI errors
+        if (response.status === 400 && errorData.detail === "Session Expired") {
+          navigate('/login', { state: { message: "Session Expired" } });
+        } else {
+          setError(errorData.detail || 'Failed to start interview. Please try again.'); // Use errorData.detail for FastAPI errors
+        }
       }
     } catch (err) {
       console.error('Error starting interview:', err);
