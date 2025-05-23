@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from .database import Base
-from .schemas import User
+from interviewer.app.api.schemas.user import User
 
 
 class UserModel(Base):

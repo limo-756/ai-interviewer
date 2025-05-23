@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from interviewer.schemas import User
+from interviewer.app.api.schemas.user import User
 
 
 class Authenticator:

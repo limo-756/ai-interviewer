@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 import interviewer.models as models
 from interviewer.app.api.utils.hash_utils import stable_hash
-from interviewer.schemas import User
+from interviewer.app.api.schemas.user import User
 
 
 def get_user_by_id(db: Session, user_id: int):
