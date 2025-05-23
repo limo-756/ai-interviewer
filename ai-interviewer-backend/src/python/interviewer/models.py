@@ -16,3 +16,23 @@ class UserModel(Base):
                     name=self.name,
                     email=self.email,
                     password=self.password_hash)
+
+
+class InterviewModel(Base):
+    __tablename__ = "interviews"
+
+    interview_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
+    topic = Column(String, index=False)
+    user_id = Column(Integer, index=True)
+    chat_id = Column(Integer, index=True)
+
+
+class InterviewChatModel(Base):
+    __tablename__ = "interview_chats"
+
+    chat_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
+    interview_id = Column(Integer, index=True)
+    sequence_no = Column(Integer, index=False)
+    participant_type = Column(String, index=False)
+    message = Column(String, index=False)
+    message_type = Column(String, index=False)
