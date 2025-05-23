@@ -2,10 +2,10 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
-    id: int
+    user_id: int
     name: str
     email: str
     password: str
 
-    def __init__(self, id: int, name: str, email: str, password: str):
-        super().__init__(id=id, name=name, email=email, password=password)
+    def __init__(self, user_id: int, name: str, email: str, password: str):
+        super().__init__(user_id=user_id, name=name, email=email, password=password)

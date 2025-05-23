@@ -15,7 +15,7 @@ class Authenticator:
             expire = datetime.utcnow() + timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)  # Default to 15 minutes
 
         data = {
-            "id": user.id,
+            "id": user.user_id,
             "exp": expire
         }
         encoded_jwt = jwt.encode(data, self.SECRET_KEY, algorithm=self.ALGORITHM)
