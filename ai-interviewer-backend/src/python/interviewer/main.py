@@ -1,12 +1,13 @@
 # main.py
-from fastapi import FastAPI, Header, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from jose import JWTError
 from sqlalchemy.orm import Session
 import uuid
+from interviewer.app.api.dao import user_dao
 
-from . import crud, database
+from . import database
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
 
@@ -65,7 +66,7 @@ def read_root():
 @app.post("/login")
 async def login(req: LoginRequest, db: Session = Depends(get_db)):
     print(f"Request aa rahi hai for email: {req.email}")
-    user = crud.get_user_by_email(db, req.email)
+    user = user_dao.get_user_by_email(db, req.email)
 
     if user is None or user.password != stable_hash(req.password):
         print(f"Type for the user is {type(user)}, {user.password}, {stable_hash(req.password)}, {req.password}")
@@ -78,22 +79,20 @@ async def login(req: LoginRequest, db: Session = Depends(get_db)):
 @app.post("/signup")
 async def signup(req: SignupRequest, db: Session = Depends(get_db)):
     print(f"Signup request for email: {req.email}")
-    user = crud.create_user(db, req.name, req.email, req.password)
+    user = user_dao.create_user(db, req.name, req.email, req.password)
     access_token = Authenticator().create_access_token(user)
     return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}
 
 
 @app.post("/start-interview")
-async def start_interview(request: Request):
+async def start_interview(req: StartInterviewRequest, request: Request):
     print(f"Received access_token in header: {request.headers}")
 
     try:
         user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
     except JWTError:
         raise HTTPException(status_code=400, detail="Session Expired")
-    print(f"Validated user_id: {user_id}")
 
-    req = request.data
     print(f"Starting interview for topic: {req.topic}")
 
     if req.resumeFile:
@@ -113,18 +112,18 @@ async def start_interview(request: Request):
 
 # @app.post("/items/", response_model=schemas.Item)
 # def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-#     return crud.create_item(db=db, item=item)
+#     return user_dao.create_item(db=db, item=item)
 #
 #
 # @app.get("/items/", response_model=list[schemas.Item])
 # def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     items = crud.get_items(db, skip=skip, limit=limit)
+#     items = user_dao.get_items(db, skip=skip, limit=limit)
 #     return items
 #
 #
 # @app.get("/items/{item_id}", response_model=schemas.Item)
 # def read_item(item_id: int, db: Session = Depends(get_db)):
-#     db_item = crud.get_item(db, item_id=item_id)
+#     db_item = user_dao.get_item(db, item_id=item_id)
 #     if db_item is None:
 #         raise HTTPException(status_code=404, detail="Item not found")
 #     return db_item
