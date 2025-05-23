@@ -21,4 +21,4 @@ ENV MODULE_NAME main
 ENV VARIABLE_NAME app
 
 # Run app.py when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"] 
+CMD ["uvicorn", "src.python.interviewer.main:app", "--host", "0.0.0.0", "--port", "80"] 

@@ -2,17 +2,10 @@
 from fastapi import FastAPI, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from app import schemas
-from app import crud
-from app import database
 
-# JWT Configuration
-SECRET_KEY = "your-secret-key"  # Change this in a real application!
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 40
+from . import crud, database
+from .app.api.services.auth import Authenticator
 
 # Create database tables on startup
 database.init_db()
@@ -20,7 +13,6 @@ database.init_db()
 app = FastAPI()
 
 
-# Define a Pydantic model for the request body
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -30,6 +22,11 @@ class SignupRequest(BaseModel):
     name: str
     email: str
     password: str
+
+
+class StartInterviewRequest(BaseModel):
+    topic: str
+    file: str
 
 
 # Allow CORS from frontend
@@ -57,51 +54,36 @@ def get_db():
         db.close()
 
 
-# Helper function to create access token
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)  # Default to 15 minutes
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
 @app.get("/")
 def read_root():
-    print("Request aa rahi hai")
     return ({"message": "Hello, FastAPI!"})
 
 
 @app.post("/login")
-async def login(req: LoginRequest, headers: str | None = Header(default=None), db: Session = Depends(get_db)):
+async def login(req: LoginRequest, db: Session = Depends(get_db)):
     print(f"Request aa rahi hai for email: {req.email}")
-    print(f"User-Agent: {headers}")
     user = crud.get_user_by_email(db, req.email)
     if user is None or user.password != hash(req.password):
+        print(f"Type for the user is {type(user)}, {user.password}, {hash(req.password)}, {req.password}")
         raise HTTPException(status_code=404, detail="User not found")
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": req.email}, expires_delta=access_token_expires
-    )
+    access_token = Authenticator().create_access_token(user)
     return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}
 
 
 @app.post("/signup")
 async def signup(req: SignupRequest, db: Session = Depends(get_db)):
     print(f"Signup request for email: {req.email}")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": req.email}, expires_delta=access_token_expires
-    )
-
-    user = schemas.User(req.name, req.email, req.password)
-    crud.create_user(db=db, user=user)
-    print("Entry successful")
+    user = crud.create_user(db, req.name, req.email, req.password)
+    access_token = Authenticator().create_access_token(user)
     return {"access_token": access_token, "token_type": "bearer", "message": "Login is successful"}
+
+
+@app.post("/start-interview")
+async def start_interview(req: StartInterviewRequest, headers: str | None = Header(default=None), db: Session = Depends(get_db)):
+    print(f"access_token: {headers.access_token}")
+    print(f"Starting interview for {req.topic}")
+    return {"interview_id": 123}
 
 
 # @app.post("/items/", response_model=schemas.Item)
