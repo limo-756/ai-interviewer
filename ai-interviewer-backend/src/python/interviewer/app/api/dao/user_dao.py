@@ -7,17 +7,16 @@ from interviewer.app.api.schemas.user import User
 
 
 def get_user_by_id(db: Session, user_id: int):
-    return db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    return db.query(models.UserModel).filter(models.UserModel.user_id == user_id).first()
 
 
 def get_user_by_email(db: Session, user_email: str) -> Optional[User]:
     user_model = (db.query(models.UserModel)
-            .filter(models.UserModel.email == user_email)
-            .first())
+                  .filter(models.UserModel.email.key == user_email)
+                  .first())
     if user_model is not None:
         return user_model.to_user()
-    else:
-        return None
+    return None
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
