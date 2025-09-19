@@ -1,5 +1,7 @@
 import datetime
 
+from interviewer.app.api.schemas.InterviewState import InterviewState
+
 
 class Interview:
     interview_id: int
@@ -8,7 +10,7 @@ class Interview:
     topic: str
     start_time: datetime.time
     end_time: datetime.time
-    state: str
+    state: InterviewState
 
     def __init__(self,
                  interview_id: int,
@@ -17,7 +19,7 @@ class Interview:
                  topic: str,
                  start_time: datetime.time,
                  end_time: datetime.time,
-                 state: str):
+                 state: InterviewState):
         self.interview_id = interview_id
         self.user_id = user_id
         self.chat_id = chat_id

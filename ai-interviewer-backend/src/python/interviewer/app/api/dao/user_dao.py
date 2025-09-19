@@ -1,5 +1,7 @@
+from fastapi import HTTPException
 from typing import Optional
 
+import sqlalchemy
 from sqlalchemy.orm import Session
 import interviewer.models as models
 from interviewer.app.api.utils.hash_utils import stable_hash
@@ -23,9 +25,12 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.UserModel).offset(skip).limit(limit).all()
 
 
-def create_user(db: Session, name: str, email: str, password: str):
+def create_user(db: Session, name: str, email: str, password: str) -> User:
     db_item = models.UserModel(name=name, email=email, password_hash=stable_hash(password))
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+    try:
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+    except sqlalchemy.exc.IntegrityError as e:
+        raise HTTPException(status_code=400, detail="User already exists")
+    return db_item.to_user()

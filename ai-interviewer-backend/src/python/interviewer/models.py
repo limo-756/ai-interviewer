@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 from .app.api.schemas.Interview import Interview
+from .app.api.schemas.InterviewState import InterviewState
 from .database import Base
 from interviewer.app.api.schemas.user import User
 
@@ -14,10 +15,10 @@ class UserModel(Base):
     password_hash = Column(String, index=False)
 
     def to_user(self) -> User:
-        return User(user_id=int(self.user_id.key),
-                    name=self.name.key,
-                    email=self.email.key,
-                    password=self.password_hash.key)
+        return User(user_id=int(self.user_id),
+                    name=self.name,
+                    email=self.email,
+                    password=self.password_hash)
 
 
 class InterviewModel(Base):
@@ -39,7 +40,7 @@ class InterviewModel(Base):
             topic=self.topic.key,
             start_time=self.start_time.key,
             end_time=self.end_time.key,
-            state=self.state.key,
+            state=InterviewState.from_str(self.state.key),
         )
 
 
