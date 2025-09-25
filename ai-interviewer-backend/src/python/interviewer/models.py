@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
+
+from .app.api.schemas.AssessmentItem import AssessmentItem
 from .app.api.schemas.Interview import Interview
 from .app.api.schemas.InterviewState import InterviewState
 from .database import Base
@@ -34,22 +36,37 @@ class InterviewModel(Base):
 
     def to_interview(self) -> Interview:
         return Interview(
-            interview_id=int(self.interview_id.key),
-            user_id=int(self.user_id.key),
-            chat_id=int(self.chat_id.key),
-            topic=self.topic.key,
-            start_time=self.start_time.key,
-            end_time=self.end_time.key,
-            state=InterviewState.from_str(self.state.key),
+            interview_id=int(self.interview_id),
+            user_id=int(self.user_id),
+            chat_id=int(self.chat_id),
+            topic=self.topic,
+            start_time=self.start_time,
+            end_time=self.end_time,
+            state=InterviewState.from_str(self.state),
         )
 
 
-class InterviewChatModel(Base):
-    __tablename__ = "interview_chats"
+class AssessmentItemModel(Base):
+    __tablename__ = "assesment_items"
 
-    chat_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
+    item_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
     interview_id = Column(Integer, index=True)
     sequence_no = Column(Integer, index=False)
-    participant_type = Column(String, index=False)
-    message = Column(String, index=False)
-    message_type = Column(String, index=False)
+    question_id = Column(Integer, index=True)
+    question = Column(String, index=False)
+    answer = Column(String, index=False, nullable=True)
+    evaluation_log = Column(String, index=False, nullable=True)
+    score = Column(Integer, index=False, nullable=True)
+
+    def to_assessment_item(self) -> AssessmentItem:
+        return AssessmentItem(
+            item_id=int(self.item_id),
+            interview_id=int(self.interview_id),
+            sequence_no=int(self.sequence_no),
+            question_id=int(self.question_id),
+            question=self.question,
+            answer=self.answer,
+            evaluation_log=self.evaluation_log,
+            score=int(self.score) if self.score else 0,
+        )
+

@@ -32,6 +32,10 @@ class StartInterviewRequest(BaseModel):
     topic: str
     resumeFile: str
 
+class GetInterviewQuestionRequest(BaseModel):
+    interview_id: int
+    question_no: int
+    all_questions: bool
 
 # Allow CORS from frontend
 origins = [
@@ -101,11 +105,36 @@ async def start_interview(req: StartInterviewRequest, request: Request):
         # Add actual resume processing logic here (e.g., decode, save, parse)
     else:
         print("No resume file provided.")
-    
+
+    interview = interview_dao.create_interview(request.topic, user_id, 12)
+
+    print(f"Interview created with ID: {interview_id} for user {user_id}")
+    return {
+        "interview_id": interview.interview_id,
+        "total_questions": 10,
+    }
+
+
+@app.post("/get-interview-questions")
+async def get_interview_questions(req: GetInterviewQuestionRequest, request: Request):
+    try:
+        user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Session Expired")
+
+    print(f"Sending : {req.topic}")
+
+    if req.resumeFile:
+        # Assuming resumeFile is a base64 data URL. Just printing a snippet for confirmation.
+        print(f"Resume file provided (data URL starts with): {req.resumeFile[:70]}...")
+        # Add actual resume processing logic here (e.g., decode, save, parse)
+    else:
+        print("No resume file provided.")
+
     # Simulate interview creation and return a more dynamic ID
     # In a real application, you would create an interview record in the database.
     interview_id = str(uuid.uuid4()) # Generate a unique ID for the interview
-    
+
     print(f"Interview created with ID: {interview_id} for user {user_id}")
     return {"interview_id": interview_id}
 

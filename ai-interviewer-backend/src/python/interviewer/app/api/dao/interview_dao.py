@@ -39,4 +39,4 @@ class InterviewDao:
         self.db.add(db_item)
         self.db.commit()
         self.db.refresh(db_item)
-        return db_item
+        return db_item.to_interview()

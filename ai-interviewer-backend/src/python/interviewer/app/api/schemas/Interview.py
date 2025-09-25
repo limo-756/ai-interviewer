@@ -8,8 +8,8 @@ class Interview:
     user_id: int
     chat_id: int
     topic: str
-    start_time: datetime.time
-    end_time: datetime.time
+    start_time: datetime
+    end_time: datetime
     state: InterviewState
 
     def __init__(self,
@@ -17,8 +17,8 @@ class Interview:
                  user_id: int,
                  chat_id: int,
                  topic: str,
-                 start_time: datetime.time,
-                 end_time: datetime.time,
+                 start_time: datetime,
+                 end_time: datetime,
                  state: InterviewState):
         self.interview_id = interview_id
         self.user_id = user_id
