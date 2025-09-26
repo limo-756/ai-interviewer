@@ -16,6 +16,7 @@ from .app.api.requests.LoginRequest import LoginRequest
 from .app.api.requests.SignupRequest import SignupRequest
 from .app.api.requests.StartInterviewRequest import StartInterviewRequest
 from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestionsResponse
+from .app.api.responses.StartInterviewResponse import StartInterviewResponse
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
 
@@ -93,13 +94,15 @@ async def start_interview(req: StartInterviewRequest, request: Request, intervie
     else:
         print("No resume file provided.")
 
-    interview = interview_dao.create_interview(request.topic, user_id, 12)
+    interview = interview_dao.create_interview(request.topic, user_id)
 
     print(f"Interview created with ID: {interview.interview_id} for user {user_id}")
-    return {
-        "interview_id": interview.interview_id,
-        "total_questions": 10,
-    }
+    return StartInterviewResponse(
+        interview_id=interview.interview_id,
+        interviewer_name=interview.topic,
+        total_questions=10,
+        total_duration_in_mins=30,
+    )
 
 
 @app.get("/get-interview-questions")

@@ -32,8 +32,8 @@ class InterviewDao:
         return interviews
 
 
-    def create_interview(self, topic: str, user_id: int, chat_id: int) -> Interview:
-        db_item = models.InterviewModel(topic=topic, user_id=user_id, chat_id=chat_id,
+    def create_interview(self, topic: str, user_id: int) -> Interview:
+        db_item = models.InterviewModel(topic=topic, user_id=user_id,
                                         end_time=datetime.datetime.now() + datetime.timedelta(hours=1),
                                         state=InterviewState.RUNNING.value)
         self.db.add(db_item)

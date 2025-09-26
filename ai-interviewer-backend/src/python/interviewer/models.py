@@ -29,7 +29,6 @@ class InterviewModel(Base):
     interview_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
     topic = Column(String, index=False)
     user_id = Column(Integer, index=True)
-    chat_id = Column(Integer, index=True)
     start_time = Column(DateTime, index=True, server_default=func.now())
     end_time = Column(DateTime, index=True)
     state = Column(String, index=True)
@@ -38,7 +37,6 @@ class InterviewModel(Base):
         return Interview(
             interview_id=int(self.interview_id),
             user_id=int(self.user_id),
-            chat_id=int(self.chat_id),
             topic=self.topic,
             start_time=self.start_time,
             end_time=self.end_time,
