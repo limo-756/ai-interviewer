@@ -1,13 +1,17 @@
 # main.py
+from typing import Annotated
+
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from jose import JWTError
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import uuid
-from interviewer.app.api.dao import user_dao
 
+from interviewer.app.api.dao import user_dao
 from . import database
+from .app.api.dao.assessment_item_dao import AssessmentItemDao
+from .app.api.dao.interview_dao import InterviewDao
+from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestionsResponse
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
 
@@ -32,7 +36,7 @@ class StartInterviewRequest(BaseModel):
     topic: str
     resumeFile: str
 
-class GetInterviewQuestionRequest(BaseModel):
+class GetInterviewQuestionsRequest(BaseModel):
     interview_id: int
     question_no: int
     all_questions: bool
@@ -61,6 +65,11 @@ def get_db():
     finally:
         db.close()
 
+def get_interview_dao(db: Annotated[Session, Depends(get_db)]):
+    return InterviewDao(db)
+
+def get_assessment_item_dao(db: Annotated[Session, Depends(get_db)]):
+    return AssessmentItemDao(db)
 
 @app.get("/")
 def read_root():
@@ -89,14 +98,9 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/start-interview")
-async def start_interview(req: StartInterviewRequest, request: Request):
+async def start_interview(req: StartInterviewRequest, request: Request, interview_dao: InterviewDao = Depends(get_interview_dao)):
     print(f"Received access_token in header: {request.headers}")
-
-    try:
-        user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
-    except JWTError:
-        raise HTTPException(status_code=400, detail="Session Expired")
-
+    user_id = validateUserAndGetUserId(request)
     print(f"Starting interview for topic: {req.topic}")
 
     if req.resumeFile:
@@ -108,7 +112,7 @@ async def start_interview(req: StartInterviewRequest, request: Request):
 
     interview = interview_dao.create_interview(request.topic, user_id, 12)
 
-    print(f"Interview created with ID: {interview_id} for user {user_id}")
+    print(f"Interview created with ID: {interview.interview_id} for user {user_id}")
     return {
         "interview_id": interview.interview_id,
         "total_questions": 10,
@@ -116,43 +120,30 @@ async def start_interview(req: StartInterviewRequest, request: Request):
 
 
 @app.post("/get-interview-questions")
-async def get_interview_questions(req: GetInterviewQuestionRequest, request: Request):
+async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Request,
+                                  interview_dao: InterviewDao = Depends(get_interview_dao),
+                                  assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao)):
+    user_id = validateUserAndGetUserId(request)
+    interview = interview_dao.get_interview_by_id(req.interview_id)
+    if req.all_questions:
+        assessment_items = assessment_item_dao.get_all_assessment_items_for_interview(req.interview_id)
+    else:
+        assessment_items = [assessment_item_dao.get_assessment_item_by_interview_id_and_sequence_no(interview.interview_id, req.question_no)]
+
+    questions = []
+    for item in assessment_items:
+        questions.append(GetInterviewQuestionsResponse.QuestionResponse(
+            question_id=item.question_id,
+            question_number=item.sequence_no,
+            question_statement=item.question,
+        ))
+
+    return GetInterviewQuestionsResponse(questions)
+
+
+def validateUserAndGetUserId(request: Request) -> int:
     try:
         user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
     except JWTError:
         raise HTTPException(status_code=400, detail="Session Expired")
-
-    print(f"Sending : {req.topic}")
-
-    if req.resumeFile:
-        # Assuming resumeFile is a base64 data URL. Just printing a snippet for confirmation.
-        print(f"Resume file provided (data URL starts with): {req.resumeFile[:70]}...")
-        # Add actual resume processing logic here (e.g., decode, save, parse)
-    else:
-        print("No resume file provided.")
-
-    # Simulate interview creation and return a more dynamic ID
-    # In a real application, you would create an interview record in the database.
-    interview_id = str(uuid.uuid4()) # Generate a unique ID for the interview
-
-    print(f"Interview created with ID: {interview_id} for user {user_id}")
-    return {"interview_id": interview_id}
-
-
-# @app.post("/items/", response_model=schemas.Item)
-# def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-#     return user_dao.create_item(db=db, item=item)
-#
-#
-# @app.get("/items/", response_model=list[schemas.Item])
-# def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     items = user_dao.get_items(db, skip=skip, limit=limit)
-#     return items
-#
-#
-# @app.get("/items/{item_id}", response_model=schemas.Item)
-# def read_item(item_id: int, db: Session = Depends(get_db)):
-#     db_item = user_dao.get_item(db, item_id=item_id)
-#     if db_item is None:
-#         raise HTTPException(status_code=404, detail="Item not found")
-#     return db_item
+    return user_id

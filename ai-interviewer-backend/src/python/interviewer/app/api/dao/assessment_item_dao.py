@@ -18,7 +18,14 @@ class AssessmentItemDao:
                      .first())
         return assessment_model_item.to_assessment_item()
 
-    def get_all_assessment_items_for_interview(self, interview_id: int) -> List[User]:
+    def get_assessment_item_by_interview_id_and_sequence_no(self, interview_id: int, sequence_no: int) -> AssessmentItem:
+        assessment_model_item = (self.db.query(models.InterviewModel)
+                     .filter(models.AssessmentItemModel.interview_id == interview_id)
+                     .filter(models.AssessmentItemModel.sequence_no == sequence_no)
+                     .first())
+        return assessment_model_item.to_assessment_item()
+
+    def get_all_assessment_items_for_interview(self, interview_id: int) -> List[AssessmentItem]:
         assessment_model_items = (self.db.query(models.AssessmentItemModel)
                      .filter(models.AssessmentItemModel.interview_id == interview_id)
                      .to_list())
