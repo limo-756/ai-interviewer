@@ -11,6 +11,10 @@ from interviewer.app.api.dao import user_dao
 from . import database
 from .app.api.dao.assessment_item_dao import AssessmentItemDao
 from .app.api.dao.interview_dao import InterviewDao
+from .app.api.requests.GetInterviewQuestionsRequest import GetInterviewQuestionsRequest
+from .app.api.requests.LoginRequest import LoginRequest
+from .app.api.requests.SignupRequest import SignupRequest
+from .app.api.requests.StartInterviewRequest import StartInterviewRequest
 from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestionsResponse
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
@@ -19,27 +23,6 @@ from .app.api.utils.hash_utils import stable_hash
 database.init_db()
 
 app = FastAPI()
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
-class SignupRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-
-
-class StartInterviewRequest(BaseModel):
-    topic: str
-    resumeFile: str
-
-class GetInterviewQuestionsRequest(BaseModel):
-    interview_id: int
-    question_no: int
-    all_questions: bool
 
 # Allow CORS from frontend
 origins = [
@@ -119,7 +102,7 @@ async def start_interview(req: StartInterviewRequest, request: Request, intervie
     }
 
 
-@app.post("/get-interview-questions")
+@app.get("/get-interview-questions")
 async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Request,
                                   interview_dao: InterviewDao = Depends(get_interview_dao),
                                   assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao)):
@@ -139,6 +122,10 @@ async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Re
         ))
 
     return GetInterviewQuestionsResponse(questions)
+
+@app.post("/submit-answer")
+async def submit_answer():
+    return
 
 
 def validateUserAndGetUserId(request: Request) -> int:
