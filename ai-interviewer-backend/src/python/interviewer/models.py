@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from .app.api.schemas.AssessmentItem import AssessmentItem
 from .app.api.schemas.Interview import Interview
 from .app.api.schemas.InterviewState import InterviewState
+from .app.api.schemas.Question import Question
 from .database import Base
 from interviewer.app.api.schemas.user import User
 
@@ -66,5 +67,19 @@ class AssessmentItemModel(Base):
             answer=self.answer,
             evaluation_log=self.evaluation_log,
             score=int(self.score) if self.score else 0,
+        )
+
+class QuestionsModel(Base):
+    __tablename__ = "questions"
+
+    question_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
+    question_statement = Column(String, index=False)
+    topic = Column(String, index=True)
+
+    def to_question(self) -> Question:
+        return Question(
+            question_id=int(self.question_id),
+            question_statement=self.question_statement,
+            topic=self.topic,
         )
 

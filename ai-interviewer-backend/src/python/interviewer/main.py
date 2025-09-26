@@ -1,4 +1,3 @@
-# main.py
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -27,14 +26,13 @@ app = FastAPI()
 
 # Allow CORS from frontend
 origins = [
-    "http://localhost:3000",  # React dev server
-    "http://127.0.0.1:3000",  # Alternate local address
-    # Add any other origins if needed
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # allow specific origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],  # allow all HTTP methods
     allow_headers=["*"],  # allow all headers
@@ -49,11 +47,14 @@ def get_db():
     finally:
         db.close()
 
+
 def get_interview_dao(db: Annotated[Session, Depends(get_db)]):
     return InterviewDao(db)
 
+
 def get_assessment_item_dao(db: Annotated[Session, Depends(get_db)]):
     return AssessmentItemDao(db)
+
 
 @app.get("/")
 def read_root():
@@ -82,19 +83,19 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/start-interview")
-async def start_interview(req: StartInterviewRequest, request: Request, interview_dao: InterviewDao = Depends(get_interview_dao)):
+async def start_interview(req: StartInterviewRequest, request: Request,
+                          interview_dao: InterviewDao = Depends(get_interview_dao)):
     print(f"Received access_token in header: {request.headers}")
-    user_id = validateUserAndGetUserId(request)
+    user_id = validate_user_and_get_userid(request)
     print(f"Starting interview for topic: {req.topic}")
 
     if req.resumeFile:
-        # Assuming resumeFile is a base64 data URL. Just printing a snippet for confirmation.
         print(f"Resume file provided (data URL starts with): {req.resumeFile[:70]}...")
-        # Add actual resume processing logic here (e.g., decode, save, parse)
     else:
         print("No resume file provided.")
 
     interview = interview_dao.create_interview(request.topic, user_id)
+
 
     print(f"Interview created with ID: {interview.interview_id} for user {user_id}")
     return StartInterviewResponse(
@@ -109,12 +110,14 @@ async def start_interview(req: StartInterviewRequest, request: Request, intervie
 async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Request,
                                   interview_dao: InterviewDao = Depends(get_interview_dao),
                                   assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao)):
-    user_id = validateUserAndGetUserId(request)
+    user_id = validate_user_and_get_userid(request)
     interview = interview_dao.get_interview_by_id(req.interview_id)
     if req.all_questions:
         assessment_items = assessment_item_dao.get_all_assessment_items_for_interview(req.interview_id)
     else:
-        assessment_items = [assessment_item_dao.get_assessment_item_by_interview_id_and_sequence_no(interview.interview_id, req.question_no)]
+        assessment_items = [
+            assessment_item_dao.get_assessment_item_by_interview_id_and_sequence_no(interview.interview_id,
+                                                                                    req.question_no)]
 
     questions = []
     for item in assessment_items:
@@ -126,12 +129,13 @@ async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Re
 
     return GetInterviewQuestionsResponse(questions)
 
+
 @app.post("/submit-answer")
 async def submit_answer():
     return
 
 
-def validateUserAndGetUserId(request: Request) -> int:
+def validate_user_and_get_userid(request: Request) -> int:
     try:
         user_id = Authenticator().validate_token_and_get_user_id(request.headers['access_token'])
     except JWTError:

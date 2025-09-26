@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 
 from interviewer import models
 from interviewer.app.api.schemas.AssessmentItem import AssessmentItem
-from interviewer.app.api.schemas.user import User
 
 
 class AssessmentItemDao:
