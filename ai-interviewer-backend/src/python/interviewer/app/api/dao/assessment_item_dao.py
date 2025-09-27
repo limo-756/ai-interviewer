@@ -3,6 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from interviewer import models
+from interviewer.app.api.exceptions.NotFoundException import NotFoundException
 from interviewer.app.api.schemas.AssessmentItem import AssessmentItem
 
 
@@ -15,6 +16,8 @@ class AssessmentItemDao:
         assessment_model_item = (self.db.query(models.InterviewModel)
                      .filter(models.AssessmentItemModel.item_id == assessment_item_id)
                      .first())
+        if not assessment_model_item:
+            raise NotFoundException("Assessment item not found")
         return assessment_model_item.to_assessment_item()
 
     def get_assessment_item_by_interview_id_and_sequence_no(self, interview_id: int, sequence_no: int) -> AssessmentItem:
@@ -22,6 +25,8 @@ class AssessmentItemDao:
                      .filter(models.AssessmentItemModel.interview_id == interview_id)
                      .filter(models.AssessmentItemModel.sequence_no == sequence_no)
                      .first())
+        if not assessment_model_item:
+            raise NotFoundException("Assessment item not found")
         return assessment_model_item.to_assessment_item()
 
     def get_all_assessment_items_for_interview(self, interview_id: int) -> List[AssessmentItem]:
@@ -65,9 +70,10 @@ class AssessmentItemDao:
         assessment_model_item = (self.db.query(models.AssessmentItemModel)
                      .filter(models.AssessmentItemModel.item_id == item_id)
                      .first())
-        if assessment_model_item:
-            assessment_model_item.evaluation_log = evaluation_log
-            assessment_model_item.score = score
+        if not assessment_model_item:
+            raise NotFoundException("Assessment item not found")
+        assessment_model_item.evaluation_log = evaluation_log
+        assessment_model_item.score = score
         self.db.commit()
         self.db.refresh(assessment_model_item)
         return assessment_model_item.to_assessment_item()
