@@ -18,6 +18,7 @@ from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestio
 from .app.api.responses.StartInterviewResponse import StartInterviewResponse
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
+from .database import get_db, get_interview_dao, get_assessment_item_dao
 
 # Create database tables on startup
 database.init_db()
@@ -37,23 +38,6 @@ app.add_middleware(
     allow_methods=["*"],  # allow all HTTP methods
     allow_headers=["*"],  # allow all headers
 )
-
-
-# Dependency to get DB session
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def get_interview_dao(db: Annotated[Session, Depends(get_db)]):
-    return InterviewDao(db)
-
-
-def get_assessment_item_dao(db: Annotated[Session, Depends(get_db)]):
-    return AssessmentItemDao(db)
 
 
 @app.get("/")

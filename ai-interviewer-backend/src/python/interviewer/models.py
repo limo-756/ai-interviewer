@@ -46,7 +46,7 @@ class InterviewModel(Base):
 
 
 class AssessmentItemModel(Base):
-    __tablename__ = "assesment_items"
+    __tablename__ = "assessment_items"
 
     item_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
     interview_id = Column(Integer, index=True)

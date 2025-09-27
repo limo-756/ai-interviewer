@@ -1,0 +1,12 @@
+[
+  {
+    "question_id": 1,
+    "topic": "behavioral",
+    "question_statement": "Describe me a situation when you has a conflict with manager"
+  },
+  {
+    "question_id": 2,
+    "topic": "behavioral",
+    "question_statement": "Describe me a situation when you has a conflict with a teammate"
+  }
+]
