@@ -14,8 +14,12 @@ from .app.api.requests.GetInterviewQuestionsRequest import GetInterviewQuestions
 from .app.api.requests.LoginRequest import LoginRequest
 from .app.api.requests.SignupRequest import SignupRequest
 from .app.api.requests.StartInterviewRequest import StartInterviewRequest
+from .app.api.requests.SubmitAnswerRequest import SubmitAnswerRequest
+from .app.api.responses.EmptyResponse import EmptyResponse
 from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestionsResponse
+from .app.api.responses.GetInterviewReportResponse import GetInterviewReportResponse
 from .app.api.responses.StartInterviewResponse import StartInterviewResponse
+from .app.api.schemas.InterviewState import InterviewState
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
 from .database import get_db, get_interview_dao, get_assessment_item_dao
@@ -115,8 +119,45 @@ async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Re
 
 
 @app.post("/submit-answer")
-async def submit_answer():
-    return
+async def submit_answer(req: SubmitAnswerRequest, request: Request,
+                        interview_dao: InterviewDao = Depends(get_interview_dao),
+                        assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao)) -> EmptyResponse:
+    user_id = validate_user_and_get_userid(request)
+    interview = interview_dao.get_interview_by_id(req.interview_id)
+    assessment_item = assessment_item_dao.get_assessment_item_by_interview_id_and_sequence_no(interview.interview_id, req.question_no)
+    assessment_item_dao.update_assessment_item_with_answer(assessment_item.item_id, req.answer)
+    return EmptyResponse()
+
+@app.get("/get-interview-report")
+async def get_interview_report(req: GetInterviewQuestionsRequest, request: Request,
+                        interview_dao: InterviewDao = Depends(get_interview_dao),
+                        assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao)) -> GetInterviewReportResponse:
+    user_id = validate_user_and_get_userid(request)
+    interview = interview_dao.get_interview_by_id(req.interview_id)
+    if InterviewState.EVALUATED != interview.state:
+        return GetInterviewReportResponse(0, 0, interview.state.value, [])
+
+    assessment_items = assessment_item_dao.get_all_assessment_items_for_interview(req.interview_id)
+    report = []
+    total_score = 0
+    total_marks = 0
+    for item in assessment_items:
+        report.append(GetInterviewReportResponse.InterviewReport(
+            question_number=item.sequence_no,
+            question_statement=item.question,
+            answer=item.answer,
+            evaluation_logs=item.evaluation_log,
+            score=item.score,
+            max_score=5,
+        ))
+        total_score += item.score
+        total_marks += 5
+    return GetInterviewReportResponse(
+        total_score=total_score,
+        total_marks=total_marks,
+        status=interview.state.value,
+        report=report,
+    )
 
 
 def validate_user_and_get_userid(request: Request) -> int:
