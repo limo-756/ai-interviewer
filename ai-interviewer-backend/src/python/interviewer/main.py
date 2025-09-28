@@ -1,3 +1,5 @@
+import concurrent.futures
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -20,14 +22,33 @@ from .app.api.responses.GetInterviewQuestionsResponse import GetInterviewQuestio
 from .app.api.responses.GetInterviewReportResponse import GetInterviewReportResponse
 from .app.api.responses.StartInterviewResponse import StartInterviewResponse
 from .app.api.schemas.InterviewState import InterviewState
+from .app.api.services.EvaluationManager import EvaluationManager
 from .app.api.services.auth import Authenticator
 from .app.api.utils.hash_utils import stable_hash
 from .database import get_db, get_interview_dao, get_assessment_item_dao
 
-# Create database tables on startup
-database.init_db()
 
-app = FastAPI()
+resources = {}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    print("Application starting")
+
+    # Create database tables on startup
+    database.init_db()
+    db = database.get_db()
+    resources["evaluation_manager"] = EvaluationManager(database.get_interview_dao(db),
+                                                        database.get_assessment_item_dao(db))
+    print("Application started")
+
+    yield  # The application will now handle requests
+
+    # Shutdown logic
+    print("Application shutdown: Cleaning up resources...")
+    resources.clear()
+
+app = FastAPI(lifespan=lifespan)
 
 # Allow CORS from frontend
 origins = [

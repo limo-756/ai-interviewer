@@ -30,3 +30,5 @@ class AssessmentItem:
     def is_evaluation_complete(self) -> bool:
         return self.answer is not None and self.score is not None
 
+    def is_attempted(self) -> bool:
+        return self.answer is not None

@@ -3,6 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from interviewer import models
+from interviewer.app.api.exceptions.NotFoundException import NotFoundException
 from interviewer.app.api.schemas.Interview import Interview
 import datetime
 
@@ -17,19 +18,43 @@ class InterviewDao:
 
     def get_interview_by_id(self, interview_id: int) -> Interview:
         interview = (self.db.query(models.InterviewModel)
-                     .filter(models.InterviewModel.interview_id.key == interview_id)
+                     .filter(models.InterviewModel.interview_id == interview_id)
                      .first())
+        if not interview:
+            raise NotFoundException("Interview not found")
         return interview.to_interview()
 
-    def get_all_interviews_for_user(self, user: User) -> List[User]:
+    def get_all_interviews_for_user(self, user: User) -> List[Interview]:
         interview_models = (self.db.query(models.InterviewModel)
-                     .filter(models.InterviewModel.user_id.key == user.user_id)
+                     .filter(models.InterviewModel.user_id == user.user_id)
                      .to_list())
 
         interviews = []
         for model in interview_models:
             interviews.append(model.to_interview())
         return interviews
+
+    def get_all_finished_interviews(self) -> List[Interview]:
+        interview_models = (self.db.query(models.InterviewModel)
+                     .filter(models.InterviewModel.state == InterviewState.RUNNING.value)
+                     .filter(models.InterviewModel.end_time > datetime.datetime.now())
+                     .to_list())
+
+        interviews = []
+        for model in interview_models:
+            interviews.append(model.to_interview())
+        return interviews
+
+    def update_interview_state(self, interview: Interview, new_state: InterviewState) -> Interview:
+        interview_model = (self.db.query(models.InterviewModel)
+                     .filter(models.InterviewModel.interview_id == interview.interview_id)
+                     .first())
+        if not interview_model:
+            raise NotFoundException("Interview not found")
+        interview_model.state = new_state.value
+        self.db.commit()
+        self.db.refresh(interview_model)
+        return interview_model.to_interview()
 
 
     def create_interview(self, topic: str, user_id: int) -> Interview:
