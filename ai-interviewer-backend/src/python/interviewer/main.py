@@ -120,7 +120,8 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db_session)):
 
 @app.post("/start-interview")
 async def start_interview(req: StartInterviewRequest, request: Request,
-                          interview_dao: InterviewDao = Depends(get_interview_dao)):
+                          interview_dao: InterviewDao = Depends(get_interview_dao),
+                          questions_manager: QuestionsManager = Depends(get_questions_manager)):
     print(f"Received access_token in header: {request.headers}")
     user_id = validate_user_and_get_userid(request)
     print(f"Starting interview for topic: {req.topic}")
@@ -130,18 +131,21 @@ async def start_interview(req: StartInterviewRequest, request: Request,
     else:
         print("No resume file provided.")
 
-    interview = interview_dao.create_interview(request.topic, user_id,
+    interview = interview_dao.create_interview(request.topic,
+                                               user_id,
                                                req.number_of_questions,
                                                req.number_of_follow_up_questions,
                                                req.duration_in_mins)
 
-
     print(f"Interview created with ID: {interview.interview_id} for user {user_id}")
+    questions_manager.assign_questions_for_interview(interview, req.number_of_questions)
+
     return StartInterviewResponse(
         interview_id=interview.interview_id,
         interviewer_name=interview.topic,
-        total_questions=10,
-        total_duration_in_mins=30,
+        total_questions=req.number_of_questions,
+        number_of_follow_up_questions=req.number_of_follow_up_questions,
+        total_duration_in_mins=req.duration_in_mins,
     )
 
 

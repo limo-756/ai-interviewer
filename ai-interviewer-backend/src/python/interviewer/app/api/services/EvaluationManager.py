@@ -26,7 +26,7 @@ class EvaluationManager:
 
     def process_finished_interviews(self):
         while True:
-            interviews = self.interview_dao.get_all_interviews_for_user()
+            interviews = self.interview_dao.get_all_finished_interviews()
 
             for interview in interviews:
                 print(f"Started evaluating interview {interview.interview_id}")
@@ -38,12 +38,17 @@ class EvaluationManager:
                 for item in assessment_items:
                     if item.is_attempted():
                         self.question_evaluator.submit(self.evaluate_question, self.EValuationTask(item))
+                        self.evaluation_status_updator.submit(self.update_evaluation_status, interview)
                 print(f"Submitted all questions for evaluation for interview {interview.interview_id}")
             sleep(1)
 
     def evaluate_question(self, task: EValuationTask):
         print(f"Evaluating question {task.assessment_item.item_id}")
-        evaluation_log, score = self.llm.evaluate_question(task.assessment_item.question, task.assessment_item.answer)
+        assessment_items = self.assessment_items_dao.get_all_assessment_items_for_question(task.assessment_item.interview_id,
+                                                                        task.assessment_item.sequence_no)
+        questions = [item.question for item in assessment_items]
+        answers = [item.answer for item in assessment_items]
+        evaluation_log, score = self.llm.evaluate_question_with_parts(questions, answers)
         self.assessment_items_dao.update_assessment_item_with_evaluation_log_and_score(task.assessment_item.item_id,
                                                                                          task.assessment_item.evaluation_log,
                                                                                          score)

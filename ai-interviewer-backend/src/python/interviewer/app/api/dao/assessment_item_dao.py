@@ -51,6 +51,18 @@ class AssessmentItemDao:
             assessment_items.append(model.to_interview())
         return assessment_items
 
+    def get_all_assessment_items_for_question(self, interview_id: int, question_no: int) -> List[AssessmentItem]:
+        assessment_model_items = (self.db.query(models.AssessmentItemModel)
+                     .filter(models.AssessmentItemModel.interview_id == interview_id)
+                     .filter(models.AssessmentItemModel.sequence_no == question_no)
+                     .to_list())
+
+        assessment_items = []
+        for model in assessment_model_items:
+            assessment_items.append(model.to_interview())
+        assessment_items.sort(key=lambda x: x.part_no)
+        return assessment_items
+
     def create_assessment_item(self, interview_id: int,
                                sequence_no: int,
                                part_no: int,

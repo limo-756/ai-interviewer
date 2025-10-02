@@ -1,9 +1,7 @@
 import random
-from typing import List
 
 from interviewer.app.api.dao.assessment_item_dao import AssessmentItemDao
 from interviewer.app.api.dao.question_dao import QuestionsDao
-from interviewer.app.api.schemas.AssessmentItem import AssessmentItem
 from interviewer.app.api.schemas.Interview import Interview
 from interviewer.app.api.schemas.Question import Question
 
@@ -35,7 +33,7 @@ class QuestionsManager:
         return topic
 
     def _should_create_new_questions(self, topic_name: str) -> bool:
-        return False
+        return True
 
     def _generate_new_questions_for_topic(self, topic_name: str) -> None:
         return None
