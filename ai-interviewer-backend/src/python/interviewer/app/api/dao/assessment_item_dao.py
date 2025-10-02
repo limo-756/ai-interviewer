@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -20,13 +20,14 @@ class AssessmentItemDao:
             raise NotFoundException("Assessment item not found")
         return assessment_model_item.to_assessment_item()
 
-    def get_assessment_item_by_interview_id_and_sequence_no(self, interview_id: int, sequence_no: int) -> AssessmentItem:
+    def get_assessment_item_by_interview_id_sequence_no_and_part_no(self, interview_id: int, sequence_no: int, part_no: int) -> Optional[AssessmentItem]:
         assessment_model_item = (self.db.query(models.InterviewModel)
                      .filter(models.AssessmentItemModel.interview_id == interview_id)
                      .filter(models.AssessmentItemModel.sequence_no == sequence_no)
+                     .filter(models.AssessmentItemModel.part_no == part_no)
                      .first())
         if not assessment_model_item:
-            raise NotFoundException("Assessment item not found")
+            return None
         return assessment_model_item.to_assessment_item()
 
     def get_all_assessment_items_for_interview(self, interview_id: int) -> List[AssessmentItem]:
@@ -39,13 +40,25 @@ class AssessmentItemDao:
             assessment_items.append(model.to_interview())
         return assessment_items
 
+    def get_all_part1_assessment_items_for_interview(self, interview_id: int) -> List[AssessmentItem]:
+        assessment_model_items = (self.db.query(models.AssessmentItemModel)
+                     .filter(models.AssessmentItemModel.interview_id == interview_id)
+                     .filter(models.AssessmentItemModel.part_no == 1)
+                     .to_list())
+
+        assessment_items = []
+        for model in assessment_model_items:
+            assessment_items.append(model.to_interview())
+        return assessment_items
 
     def create_assessment_item(self, interview_id: int,
                                sequence_no: int,
+                               part_no: int,
                                question_id: int,
                                question: str) -> AssessmentItem:
         db_item = models.AssessmentItemModel(interview_id=interview_id,
                                              sequence_no=sequence_no,
+                                             part_no=part_no,
                                              question_id=question_id,
                                              question=question)
         self.db.add(db_item)

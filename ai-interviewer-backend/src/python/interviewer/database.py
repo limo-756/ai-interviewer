@@ -29,17 +29,6 @@ def get_db():
     finally:
         SessionLocal.close()
 
-def get_interview_dao(db: Annotated[Session, Depends(get_db)]):
-    return InterviewDao(db)
-
-
-def get_assessment_item_dao(db: Annotated[Session, Depends(get_db)]):
-    return AssessmentItemDao(db)
-
-def get_questions_dao(db: Annotated[Session, Depends(get_db)]):
-    return QuestionsDao(db)
-
-
 def init_db():
     Base.metadata.create_all(bind=engine)
     populate_questions_table()

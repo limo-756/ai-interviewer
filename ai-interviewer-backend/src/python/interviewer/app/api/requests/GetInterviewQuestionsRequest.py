@@ -4,6 +4,7 @@ from interviewer.app.api.requests.BaseRequest import BaseRequest
 class GetInterviewQuestionsRequest(BaseRequest):
     interview_id: int
     question_no: int
+    part_no: int
     all_questions: bool
 
     def validate(self):
@@ -13,3 +14,5 @@ class GetInterviewQuestionsRequest(BaseRequest):
             return
         if self.question_no < 1:
             raise ValueError("Question number must be greater than 0")
+        if self.part_no < 1:
+            raise ValueError("Part number must be greater than 0")

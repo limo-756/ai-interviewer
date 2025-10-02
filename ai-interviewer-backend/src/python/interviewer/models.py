@@ -33,6 +33,8 @@ class InterviewModel(Base):
     start_time = Column(DateTime, index=True, server_default=func.now())
     end_time = Column(DateTime, index=True)
     state = Column(String, index=True)
+    number_of_questions = Column(Integer, index=False)
+    number_of_follow_up_questions = Column(Integer, index=False)
 
     def to_interview(self) -> Interview:
         return Interview(
@@ -42,6 +44,8 @@ class InterviewModel(Base):
             start_time=self.start_time,
             end_time=self.end_time,
             state=InterviewState.from_str(self.state),
+            number_of_questions=int(self.number_of_questions),
+            number_of_follow_up_questions=int(self.number_of_follow_up_questions),
         )
 
 
@@ -51,6 +55,7 @@ class AssessmentItemModel(Base):
     item_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
     interview_id = Column(Integer, index=True)
     sequence_no = Column(Integer, index=False)
+    part_no = Column(Integer, index=False)
     question_id = Column(Integer, index=True)
     question = Column(String, index=False)
     answer = Column(String, index=False, nullable=True)
@@ -62,6 +67,7 @@ class AssessmentItemModel(Base):
             item_id=int(self.item_id),
             interview_id=int(self.interview_id),
             sequence_no=int(self.sequence_no),
+            part_no=int(self.part_no),
             question_id=int(self.question_id),
             question=self.question,
             answer=self.answer,

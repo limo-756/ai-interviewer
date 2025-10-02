@@ -11,6 +11,8 @@ class Interview:
     start_time: datetime
     end_time: datetime
     state: InterviewState
+    number_of_questions: int
+    number_of_follow_up_questions: int
 
     def __init__(self,
                  interview_id: int,
@@ -19,7 +21,9 @@ class Interview:
                  topic: str,
                  start_time: datetime,
                  end_time: datetime,
-                 state: InterviewState):
+                 state: InterviewState,
+                 number_of_questions: int,
+                 number_of_follow_up_questions: int):
         self.interview_id = interview_id
         self.user_id = user_id
         self.chat_id = chat_id
@@ -27,3 +31,5 @@ class Interview:
         self.start_time = start_time
         self.end_time = end_time
         self.state = state
+        self.number_of_questions = number_of_questions
+        self.number_of_follow_up_questions = number_of_follow_up_questions

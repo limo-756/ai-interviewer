@@ -3,8 +3,9 @@ from typing import List
 
 class GetInterviewReportResponse:
     class InterviewReport:
-        def __init__(self, question_number: int, question_statement: str, answer: str, evaluation_logs: str, score: int, max_score: int):
+        def __init__(self, question_number: int, part_no: int, question_statement: str, answer: str, evaluation_logs: str, score: int, max_score: int):
             self.question_number = question_number
+            self.part_no = part_no
             self.question_statement = question_statement
             self.answer = answer
             self.evaluation_logs = evaluation_logs

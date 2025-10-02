@@ -57,10 +57,16 @@ class InterviewDao:
         return interview_model.to_interview()
 
 
-    def create_interview(self, topic: str, user_id: int) -> Interview:
+    def create_interview(self, topic: str,
+                         user_id: int,
+                         number_of_questions: int,
+                         number_of_follow_up_questions: int,
+                         duration_in_mins: int) -> Interview:
         db_item = models.InterviewModel(topic=topic, user_id=user_id,
-                                        end_time=datetime.datetime.now() + datetime.timedelta(hours=1),
-                                        state=InterviewState.RUNNING.value)
+                                        end_time=datetime.datetime.now() + datetime.timedelta(minutes=duration_in_mins),
+                                        state=InterviewState.RUNNING.value,
+                                        number_of_questions=number_of_questions,
+                                        number_of_follow_up_questions=number_of_follow_up_questions)
         self.db.add(db_item)
         self.db.commit()
         self.db.refresh(db_item)

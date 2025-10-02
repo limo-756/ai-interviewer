@@ -2,6 +2,7 @@ class AssessmentItem:
     item_id: int
     interview_id: int
     sequence_no: int
+    part_no: int
     question_id: int
     question: str
     answer: str
@@ -12,6 +13,7 @@ class AssessmentItem:
                  item_id: int,
                  interview_id: int,
                  sequence_no: int,
+                 part_no: int,
                  question_id: int,
                  question: str,
                  answer: str,
@@ -21,6 +23,7 @@ class AssessmentItem:
         self.item_id = item_id
         self.interview_id = interview_id
         self.sequence_no = sequence_no
+        self.part_no = part_no
         self.question_id = question_id
         self.question = question
         self.answer = answer

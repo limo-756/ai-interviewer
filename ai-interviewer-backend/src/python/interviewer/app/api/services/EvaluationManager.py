@@ -3,6 +3,7 @@ from time import sleep
 
 from interviewer.app.api.dao.assessment_item_dao import AssessmentItemDao
 from interviewer.app.api.dao.interview_dao import InterviewDao
+from interviewer.app.api.external.LLMService import LLMService
 from interviewer.app.api.schemas.AssessmentItem import AssessmentItem
 from interviewer.app.api.schemas.Interview import Interview
 from interviewer.app.api.schemas.InterviewState import InterviewState
@@ -10,9 +11,10 @@ from interviewer.app.api.schemas.InterviewState import InterviewState
 
 class EvaluationManager:
 
-    def __init__(self, interview_dao: InterviewDao, assessment_items_dao: AssessmentItemDao):
+    def __init__(self, interview_dao: InterviewDao, assessment_items_dao: AssessmentItemDao, llm: LLMService):
         self.interview_dao = interview_dao
         self.assessment_items_dao = assessment_items_dao
+        self.llm = llm
         self.interview_evaluation_tracker = {}
         self.finished_interview_processor = ThreadPoolExecutor(max_workers=1)
         self.question_evaluator = ThreadPoolExecutor(max_workers=5)
@@ -29,7 +31,8 @@ class EvaluationManager:
             for interview in interviews:
                 print(f"Started evaluating interview {interview.interview_id}")
                 self.interview_dao.update_interview_state(interview, InterviewState.FINISHED)
-                assessment_items = self.assessment_items_dao.get_all_assessment_items_for_interview(interview.interview_id)
+                assessment_items = self.assessment_items_dao.get_all_part1_assessment_items_for_interview(
+                    interview.interview_id)
                 number_of_questions_answered = sum(filter(lambda item: item.is_attempted(), assessment_items))
                 self.interview_evaluation_tracker[interview.interview_id] = number_of_questions_answered
                 for item in assessment_items:
@@ -40,7 +43,7 @@ class EvaluationManager:
 
     def evaluate_question(self, task: EValuationTask):
         print(f"Evaluating question {task.assessment_item.item_id}")
-        evaluation_log, score = llm.evaluate_question(task.assessment_item.question, task.assessment_item.answer)
+        evaluation_log, score = self.llm.evaluate_question(task.assessment_item.question, task.assessment_item.answer)
         self.assessment_items_dao.update_assessment_item_with_evaluation_log_and_score(task.assessment_item.item_id,
                                                                                          task.assessment_item.evaluation_log,
                                                                                          score)
