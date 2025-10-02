@@ -24,9 +24,10 @@ class InterviewDao:
             raise NotFoundException("Interview not found")
         return interview.to_interview()
 
-    def get_all_interviews_for_user(self, user: User) -> List[Interview]:
+    def get_all_past_interviews_for_user(self, user_id: int) -> List[Interview]:
         interview_models = (self.db.query(models.InterviewModel)
-                     .filter(models.InterviewModel.user_id == user.user_id)
+                     .filter(models.InterviewModel.user_id == user_id)
+                     .filter(models.InterviewModel.end_time < datetime.datetime.now())
                      .to_list())
 
         interviews = []

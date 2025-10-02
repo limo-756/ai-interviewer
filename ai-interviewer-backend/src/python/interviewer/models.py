@@ -79,12 +79,14 @@ class QuestionsModel(Base):
     __tablename__ = "questions"
 
     question_id = Column(Integer, autoincrement=True, unique=True, primary_key=True, index=True)
+    part_no = Column(Integer, index=False, default=1)
     question_statement = Column(String, index=False)
     topic = Column(String, index=True)
 
     def to_question(self) -> Question:
         return Question(
             question_id=int(self.question_id),
+            part_no=int(self.part_no),
             question_statement=self.question_statement,
             topic=self.topic,
         )

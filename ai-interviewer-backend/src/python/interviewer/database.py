@@ -29,12 +29,12 @@ def get_db():
     finally:
         SessionLocal.close()
 
-def init_db():
+def init_db(questions_dao: QuestionsDao):
     Base.metadata.create_all(bind=engine)
-    populate_questions_table()
+    populate_questions_table(questions_dao)
 
 
-def populate_questions_table(questions_dao: QuestionsDao = Depends(get_questions_dao)):
+def populate_questions_table(questions_dao: QuestionsDao):
     with open("ai-interviewer-backend/questionBank.json", 'r') as f:
         questions = json.load(f)
 

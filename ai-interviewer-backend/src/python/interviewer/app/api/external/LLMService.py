@@ -19,5 +19,8 @@ class LLMService:
             input="Write a short bedtime story about a unicorn."
         )
 
-    def generate_response(self, prompt):
+    def generate_questions(self, topic: str, number_of_questions: int = 10) -> List[str]:
+        return "response"
+
+    def generate_probing_question(self, topic: str, questions: List[str], answer: List[str]) -> str:
         return "response"

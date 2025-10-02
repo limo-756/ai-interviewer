@@ -34,18 +34,20 @@ async def lifespan(app: FastAPI):
     print("Application starting")
 
     # Create database tables on startup
-    database.init_db()
     db = database.get_db()
+    app.state.questions_dao = QuestionsDao(db)
+    database.init_db(app.state.questions_dao)
     app.state.db = db
     app.state.interview_dao = InterviewDao(db)
     app.state.assessment_item_dao = AssessmentItemDao(db)
-    app.state.questions_dao = QuestionsDao(db)
     app.state.llm_service = LLMService()
     app.state.evaluation_manager = EvaluationManager(app.state.interview_dao,
                                                      app.state.assessment_item_dao,
                                                      app.state.llm_service)
-    app.state.questions_manager = QuestionsManager(app.state.questions_dao,
-                                                   app.state.assessment_item_dao)
+    app.state.questions_manager = QuestionsManager(app.state.interview_dao,
+                                                   app.state.questions_dao,
+                                                   app.state.assessment_item_dao,
+                                                   app.state.llm_service)
     print("Application started")
 
     yield  # The application will now handle requests
@@ -163,7 +165,12 @@ async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Re
                                                                                     req.question_no,
                                                                                     req.part_no)
         if assessment_item is None:
-            assessment_item = questions_manager.generate_probing_question(interview, req.question_no)
+            question = questions_manager.generate_probing_question(interview, req.question_no)
+            assessment_item = assessment_item_dao.create_assessment_item(interview.interview_id,
+                                                                           req.question_no,
+                                                                           req.part_no,
+                                                                           question.question_id,
+                                                                           question.question_statement)
         assessment_items = [assessment_item]
 
     questions = []
