@@ -155,6 +155,7 @@ async def start_interview(req: StartInterviewRequest, request: Request,
 async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Request,
                                   interview_dao: InterviewDao = Depends(get_interview_dao),
                                   assessment_item_dao: AssessmentItemDao = Depends(get_assessment_item_dao),
+                                  questions_dao: QuestionsDao = Depends(get_questions_dao),
                                   questions_manager: QuestionsManager = Depends(get_questions_manager)) -> GetInterviewQuestionsResponse:
     user_id = validate_user_and_get_userid(request)
     interview = interview_dao.get_interview_by_id(req.interview_id)
@@ -165,7 +166,10 @@ async def get_interview_questions(req: GetInterviewQuestionsRequest, request: Re
                                                                                     req.question_no,
                                                                                     req.part_no)
         if assessment_item is None:
-            question = questions_manager.generate_probing_question(interview, req.question_no)
+            question = questions_dao.get_question_by_id_and_part(req.question_no, req.part_no)
+            if question is None:
+                should_save_question = True if interview.topic != "resume" else False
+                question = questions_manager.generate_probing_question(interview, req.question_no, should_save_question)
             assessment_item = assessment_item_dao.create_assessment_item(interview.interview_id,
                                                                            req.question_no,
                                                                            req.part_no,

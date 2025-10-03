@@ -80,17 +80,28 @@ class QuestionsManager:
         random.shuffle(questions)
         return questions[:number_of_questions]
 
-    def generate_probing_question(self, interview: Interview, question_no: int) -> Question:
+    def generate_probing_question(self, interview: Interview, question_no: int, should_save_new_question: bool) -> Question:
         assessment_items = self.assessment_item_dao.get_all_assessment_items_for_question(interview.interview_id,
                                                                         question_no)
+        if len(assessment_items) == 0:
+            print(f"Cannot generate probing question for question number {question_no} and interview {interview.interview_id}")
+            raise Exception(f"Cannot generate probing question for question number {question_no} and interview {interview.interview_id}")
+
+        question_id = assessment_items[0].question_id
         questions = [item.question for item in assessment_items]
         answers = [item.answer for item in assessment_items]
         new_question = self.llm_service.generate_probing_question(self._resolve_topic_name(interview.topic),
                                                                   questions,
                                                                   answers)
-        return self.questions_dao.create_question(
-            topic=self._resolve_topic_name(interview.topic),
-            question=new_question,
-            part_no=len(assessment_items) + 1,
-            question_id=None
-        )
+        if should_save_new_question:
+            return self.questions_dao.create_question(
+                topic=self._resolve_topic_name(interview.topic),
+                question=new_question,
+                part_no=len(assessment_items) + 1,
+                question_id=question_id
+            )
+        else:
+            return Question(question_id=question_id,
+                            part_no=len(assessment_items) + 1,
+                            question_statement=new_question,
+                            topic=self._resolve_topic_name(interview.topic))

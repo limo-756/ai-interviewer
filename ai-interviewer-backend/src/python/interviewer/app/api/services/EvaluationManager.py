@@ -19,6 +19,7 @@ class EvaluationManager:
         self.finished_interview_processor = ThreadPoolExecutor(max_workers=1)
         self.question_evaluator = ThreadPoolExecutor(max_workers=5)
         self.evaluation_status_updator = ThreadPoolExecutor(max_workers=1)
+        self.finished_interview_processor.submit(self.process_finished_interviews)
 
     class EValuationTask:
         def __init__(self, assessment_item: AssessmentItem):

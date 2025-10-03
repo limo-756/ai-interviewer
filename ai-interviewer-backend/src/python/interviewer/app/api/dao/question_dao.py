@@ -21,6 +21,15 @@ class QuestionsDao:
             questions.append(model.to_question())
         return questions
 
+    def get_question_by_id_and_part(self, question_id: int, part_no: int) -> Optional[Question]:
+        questions_model = (self.db.query(models.QuestionsModel)
+                     .filter(models.QuestionsModel.question_id == question_id)
+                     .filter(models.QuestionsModel.part_no == part_no)
+                     .first())
+        if questions_model is None:
+            return None
+        return questions_model.to_question()
+
     def get_number_of_questions_on_topic(self, topic:str) -> int:
         return (self.db.query(models.QuestionsModel)
                      .filter(models.QuestionsModel.topic == topic)
